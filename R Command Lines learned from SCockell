@@ -1,0 +1,15 @@
+#Load packages
+library(tximport)
+library(tibble)
+
+## NOT data.frame BUT tibble
+sample_table=read.csv("Sample_names.csv")
+
+sample_files=paste0(pull(sample_table,'Sample.Name'),'_quant.sf')
+
+gene_map=read.csv("gene_map.csv",col.names=c('enstid','ensgid'))
+
+count_data=tximport(files=sample_files,
+                    type= "salmon",
+                    tx2gene = gene_map)
+                    
