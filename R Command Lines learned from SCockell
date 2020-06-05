@@ -31,3 +31,17 @@ colnames(sample_table)[1]="Sample"
 deseq_dataset=DESeqDataSetFromTximport(txi=count_data,
                                        colData=sample_table,
                                        design= ~ Conditions)
+
+counts(deseq_dataset)[1:6,1:3]
+count_data$counts[1:6,1:3]
+
+deseq_dataset=estimateSizeFactors(deseq_dataset)
+normalizationFactors(deseq_dataset)
+counts(deseq_dataset,normalized=TRUE)[1:6,1:3]
+
+boxplot(counts(deseq_dataset,normalized=TRUE))
+vst= varianceStabilizingTransformation(deseq_dataset)
+boxplot(assay(vst))
+
+#observe the SF3B4 effect
+plotPCA(vst,intgroup='Conditions')+theme_bw()
