@@ -45,3 +45,47 @@ boxplot(assay(vst))
 
 #observe the SF3B4 effect
 plotPCA(vst,intgroup='Conditions')+theme_bw()
+
+d = assay(vst)
+d=t(d)
+d=dist(d)
+
+h=hclust(d)
+plot(h)
+
+dds=deseq_dataset
+
+#3 steps to DESeq2 analysis
+#1)estimate size factors (normalisation)
+#2) estimate dispersions
+#3) apply stastistics (Wald Test)
+
+dds=estimateDispersions(dds)
+plotDispEsts(dds)
+
+#step 3
+dds=nbinomWaldTest(dds)
+
+result_table=results(dds)
+summary(result_table)
+View(as.data.frame(result_table))
+
+#result_table is Dataframe not a data.frame!
+result_df=as.data.frame(result_table)
+
+sum(complete.cases(result_df))
+
+filter_df1= result_df[complete.cases(result_df),]
+View(filter_df1)
+
+#filter results
+#padj <0,05
+#log2FoldChange >1 <-1
+
+filter_df1$padj < 0.05
+
+filter_df2= filter_df1[filter_df1$padj <0.05,]
+
+abs(filter_df2$log2FoldChange) >1
+
+filter_df3=filter_df2[abs(filter_df2$log2FoldChange) > 1,]
