@@ -2,6 +2,9 @@
 library(tidyverse)
 library(tximport)
 library(DESeq2)
+library(BiocManager)
+library(plotly)
+library(biomaRt)
 
 ## NOT data.frame BUT tibble
 sample_table=read.csv("Sample_names.csv")
@@ -39,19 +42,19 @@ deseq_dataset=estimateSizeFactors(deseq_dataset)
 normalizationFactors(deseq_dataset)
 counts(deseq_dataset,normalized=TRUE)[1:6,1:3]
 
-boxplot(counts(deseq_dataset,normalized=TRUE))
+#boxplot(counts(deseq_dataset,normalized=TRUE))
 vst= varianceStabilizingTransformation(deseq_dataset)
-boxplot(assay(vst))
+#boxplot(assay(vst))
 
 #observe the SF3B4 effect
-plotPCA(vst,intgroup='Conditions')+theme_bw()
+#plotPCA(vst,intgroup='Conditions')+theme_bw()
 
-d = assay(vst)
-d=t(d)
-d=dist(d)
+#d = assay(vst)
+#d=t(d)
+#d=dist(d)
 
-h=hclust(d)
-plot(h)
+#h=hclust(d)
+#plot(h)
 
 dds=deseq_dataset
 
@@ -61,7 +64,7 @@ dds=deseq_dataset
 #3) apply stastistics (Wald Test)
 
 dds=estimateDispersions(dds)
-plotDispEsts(dds)
+#plotDispEsts(dds)
 
 #step 3
 dds=nbinomWaldTest(dds)
@@ -85,7 +88,37 @@ View(filter_df1)
 filter_df1$padj < 0.05
 
 filter_df2= filter_df1[filter_df1$padj <0.05,]
-
+View(filter_df2)
 abs(filter_df2$log2FoldChange) >1
 
 filter_df3=filter_df2[abs(filter_df2$log2FoldChange) > 1,]
+
+View(filter_df3)
+
+#plotMA(result_table)
+
+#volcano plot
+
+#filter_df1$test = filter_df1$padj <0.05 & abs(filter_df1$log2FoldChange) > 1
+
+#filter_df1 = rownames_to_column(filter_df1 , var='ensgene')
+
+#g = ggplot(filter_df1,aes(x=log2FoldChange, y= -log10(padj), name=ensgene))
+
+#ggplotly(g)
+
+filter_df3=rownames_to_column(filter_df3,var='ensgene')
+View(filter_df3)
+
+listMarts()
+ensembl= useEnsembl(biomart="ensembl")
+View(listDatasets(ensembl))
+ensembl=useDataset("hsapiens_gene_ensembl",mart=ensembl)
+View(listAttributes(ensembl))
+View(listFilters(ensembl))
+getBM(attributes=c('ensembl_gene_id','ensembl_gene_id_version',
+                   'ensembl_transcript_id','ensembl_transcript_id_version',
+                   'external_gene_name'),
+      filters=c('ensembl_gene_id'),
+      values=filter_df3$ensgene,
+      mart=ensembl)
